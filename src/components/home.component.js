@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Dropdown } from 'react-bootstrap';
+import { Modal, Dropdown, Table } from 'react-bootstrap';
 import axios from 'axios';
 import { Fab, Action } from 'react-tiny-fab';
 import { GrAdd,GrMicrophone, GrDocumentImage, GrPowerShutdown } from "react-icons/gr";
@@ -96,13 +96,19 @@ export default class Home extends Component {
         this.note = {
             titulo: "",
             texto: [],
-            idNota: ""
+            idNota: "",
+            tablas:[]
         };
-        this.refresh = this.refresh.bind(this);
     };
 
     closeDrag = () =>{
-        this.setState({showDrag:false});
+
+        axios.post("https://spovx98jlh.execute-api.us-east-2.amazonaws.com/prod/getnotes", { user: global.username })
+            .then((res) => {
+                this.setState({ notes: res.data, showDrag:false });
+            }, (error) => {
+                console.log(error);
+            });
     };
     
     microphone = () =>{
@@ -118,15 +124,7 @@ export default class Home extends Component {
     };
 
     componentDidMount() {
-        axios.post("https://spovx98jlh.execute-api.us-east-2.amazonaws.com/prod/getnotes", { user: "josecarlos" })
-            .then(res => {
-                this.setState({ notes: res.data });
-            });
-    }
-
-    componentDidUpdate()
-    {
-        axios.post("https://spovx98jlh.execute-api.us-east-2.amazonaws.com/prod/getnotes", { user: "josecarlos" })
+        axios.post("https://spovx98jlh.execute-api.us-east-2.amazonaws.com/prod/getnotes", { user: global.username })
             .then(res => {
                 this.setState({ notes: res.data });
             });
@@ -134,20 +132,18 @@ export default class Home extends Component {
 
     traduct = () => {
         let req = { idNote: this.note.idNota, code: this.state.language };
-        console.log(req);
         axios.post("https://spovx98jlh.execute-api.us-east-2.amazonaws.com/prod/translate", req)
             .then(res => {
-                console.log(res.data);
                 this.setState({ traduccion: res.data });
             });
     }
 
-    manageEvent(note) {
+    manageEvent=(note)=> {
         this.note.titulo = note.titulo;
         this.note.texto = note.texto;
         this.note.idNota = note.idNota;
+        this.note.tablas = note.tablas;
         this.setState({ showTranslate: true });
-        console.log(note);
     }
 
     render() {
@@ -169,13 +165,13 @@ export default class Home extends Component {
                     <Action
                         text="Imagen"
                         children={<GrDocumentImage />}
-                        onClick={this.picture}
-                    ></Action>
+                        onClick={()=>this.picture()}
+                    />
                     <Action
                         text="Voz"
                         children={<GrMicrophone />}
-                        onClick={this.microphone}
-                    ></Action>
+                        onClick={()=>this.microphone()}
+                    />
                 </Fab>
                 <Modal
                     show={this.state.showDrag}
@@ -186,13 +182,14 @@ export default class Home extends Component {
                         <Modal.Title>Añadir nota</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <Drag show={this.closeDrag} refresh={this.refresh}></Drag>
+                        <Drag show={this.closeDrag}/>
                     </Modal.Body>
                 </Modal>
                 <Modal
                     show={this.state.showTranslate}
                     onHide={() => this.setState({ showTranslate: false, traduccion: "" })}
                     size="lg"
+                    scrollable={true}
                 >
                     <Modal.Header closeButton>
                         <Modal.Title>Obtener traducción</Modal.Title>
@@ -200,6 +197,20 @@ export default class Home extends Component {
                     <Modal.Body>
                         <h1>{this.note.titulo}</h1>
                         {this.note.texto.map((t) => (<p key={t}>{t}</p>))}
+                        {this.note.tablas.map((tb) => (
+                            <Table striped bordered hover responsive>
+                                <thead>
+                                <tr>
+                                {Object.keys(tb[0]).map(h=><th>{h}</th>)}
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {tb.map(row=><tr>{Object.values(row).map(cell=><td>{cell}</td>)}</tr>)}
+                                </tbody>
+                            </Table>
+                        ))}
+                    </Modal.Body>
+                    <Modal.Footer>
                         <Dropdown>
                             <Dropdown.Toggle variant="success" >
                                 Selecciona un idioma
@@ -214,7 +225,7 @@ export default class Home extends Component {
                         <div className="row justify-content-center m-3">
                             <p>{this.state.traduccion}</p>
                         </div>
-                    </Modal.Body>
+                    </Modal.Footer>
                 </Modal>
             </div>
         );

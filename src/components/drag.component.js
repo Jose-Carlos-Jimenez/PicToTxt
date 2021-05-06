@@ -18,13 +18,15 @@ export default class Drag extends Component {
         this.state = {
             name:"",
             checked: false,
-            radioValue: "Textract"
+            radioValue: "Textract",
+            filename: ''
         };
         this.radios = [
             { name: 'Textract', value: '1' },
             { name: 'Rekognition', value: '2' },
         ];
         this.file = null;
+        this.fileInputRef = React.createRef();
     }
 
     async handleSubmit(event) {
@@ -40,40 +42,54 @@ export default class Drag extends Component {
         axios.post("https://spovx98jlh.execute-api.us-east-2.amazonaws.com/prod/newnote", requestBody)
         .then( res => {
             console.log(res);
+            this.props.show();
         });
-        this.props.show();
-        this.props.refresh();
+
     }
 
+    onTargetClick = () => {
+        this.fileInputRef.current.click()
+    }
+    onFileInputChange = (event) => {
+        this.file = event.target.files[0];
+        this.setState({filename:this.file.name})
+        // do something with your files...
+    }
     render() {
 
         return (
             <form onSubmit={this.handleSubmit.bind(this)} >
                 <div className="form-group">
                     <label>Nombre</label>
-                    <input type="user" className="form-control" placeholder="Ingrese el titulo de la nota"
-                        onChange={(e)=>this.setState({name:e.target.value})}
-                        value={this.state.name}
+                    <input type="user"
+                           className="form-control"
+                           placeholder="Ingrese el titulo de la nota"
+                           onChange={(e)=>this.setState({name:e.target.value})}
+                           value={this.state.name}
                     />
                 </div>
 
-                <div className="form-group">
+                <Form.Group>
                     <label>Imagen</label>
+                    <input
+                        onChange={this.onFileInputChange}
+                        ref={this.fileInputRef}
+                        type="file"
+                        style={{display:'none'}}
+                        className="hidden"
+                    />
                     <FileDrop
-                        onFrameDragEnter={(event) => console.log('onFrameDragEnter', event)}
-                        onFrameDragLeave={(event) => console.log('onFrameDragLeave', event)}
-                        onFrameDrop={(event) => console.log('onFrameDrop', event)}
-                        onDragOver={(event) => console.log('onDragOver', event)}
-                        onDragLeave={(event) => console.log('onDragLeave', event)}
-                        onDrop={(files, event) => {console.log('onDrop!', typeof files[0], event); this.file = files[0]}}
+                        onDrop={(files, event) => { this.file = files[0]; this.setState({filename:this.file.name})}}
+                        onTargetClick={this.onTargetClick}
                         >
                         Arrastra la imagen aquí!
-                        <GrImage></GrImage>
+                        <GrImage/>
                     </FileDrop>
-                </div>
+                    <p>{this.state.filename}</p>
+                </Form.Group>
                 <Form.Group>
                     <Form.Label>Tipo de reconocimiento</Form.Label>
-                        <br></br>
+                        <br/>
                         <ButtonGroup toggle>
                             {this.radios.map((radio, idx) => (
                             <ToggleButton
