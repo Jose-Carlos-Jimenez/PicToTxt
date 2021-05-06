@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import { Auth } from "aws-amplify";
+import { Link } from "react-router-dom";
+
 
 export default class SignUp extends Component {
 
@@ -67,7 +69,7 @@ export default class SignUp extends Component {
 
                 <button type="submit" className="btn btn-primary btn-block" disabled={!this.validateForm()}>Registrarse</button>
                 <p className="forgot-password text-right">
-                    ¿Ya te <a href="/sign-in">registraste</a>?
+                    ¿Ya te <Link to={"/sign-in"}>registraste</Link>?
                 </p>
             </form>
         );

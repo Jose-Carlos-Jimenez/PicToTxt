@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Auth } from "aws-amplify";
+import { Link } from "react-router-dom";
 
 export default class Login extends Component {
     
@@ -18,11 +19,11 @@ export default class Login extends Component {
     async handleSubmit(event) {
         event.preventDefault();
         try {
-            await Auth.signIn(this.state.email, this.state.password);
-            global.user = this.state.email;
-            alert("Welcome " + global.user);
+            var res = await Auth.signIn(this.state.email, this.state.password);
+            global.username = res.username;
+            alert("Welcome " + global.username);
             this.props.history.push("home");
-            
+            this.props.show(true);            
         } catch (e) {
             alert(e.message);
         }
@@ -59,7 +60,7 @@ export default class Login extends Component {
                 <button type="submit" className="btn btn-primary btn-block" disabled={!this.validateForm()}>Ingresar</button>
                
                 <p className="forgot-password text-right">
-                    ¿Aún no tienes <a href="sign-up">cuenta</a>?
+                    ¿Aún no tienes <Link to={"/sign-up"}>cuenta</Link>?
                 </p>
             </form>
         );
